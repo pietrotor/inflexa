@@ -13,29 +13,57 @@ import { User } from './entities/user.entity';
 import { LoginUserDto, CreateUserDto } from './dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { InjectModel } from '@nestjs/mongoose';
+import { InstituteService } from 'src/institute/institute.service';
+import { CareersService } from 'src/careers/careers.service';
+import { paginate, PaginationDto } from 'src/common';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
+    private readonly instituteService: InstituteService,
+    private readonly careersService: CareersService,
 
     private readonly jwtService: JwtService,
   ) {}
 
-  async find(id: string) {
-    const user = await this.userModel.findById(id);
+  async find(id: string, user: User) {
+    const userInstance = await this.userModel.findOne({
+      _id: id,
+      deleted: false,
+      'institute.instituteId': user.institute.instituteId,
+    });
 
-    return user;
+    if (!userInstance) throw new BadRequestException('User not found');
+
+    return userInstance;
   }
 
   async create(createUserDto: CreateUserDto) {
     try {
-      const { password, ...userData } = createUserDto;
+      const { password, instituteId, ...userData } = createUserDto;
+
+      const userExists = await this.userModel.findOne({
+        email: userData.email,
+        deleted: false,
+        'institute.instituteId': instituteId,
+      });
+
+      if (userExists)
+        throw new BadRequestException('User with that email already exists');
+
+      const instituteInstance = await this.instituteService.findOne(
+        instituteId,
+      );
 
       const user = await this.userModel.create({
         ...userData,
         password: bcrypt.hashSync(password, 10),
+        institute: {
+          instituteId: instituteInstance._id,
+          instituteName: instituteInstance.name,
+        },
       });
 
       delete user.password;
@@ -44,7 +72,10 @@ export class AuthService {
 
       return {
         ...userAsObject,
-        token: this.getJwtToken({ id: user.id }),
+        token: this.getJwtToken({
+          id: user.id,
+          instituteId: user.institute.instituteId,
+        }),
       };
       // TODO: Retornar el JWT de acceso
     } catch (error) {
@@ -55,10 +86,12 @@ export class AuthService {
   async login(loginUserDto: LoginUserDto) {
     const { password, email } = loginUserDto;
 
-    const user = await this.userModel.findOne({
-      where: { email },
-      select: { email: true, password: true, id: true }, //! OJO!
-    });
+    const user = await this.userModel
+      .findOne({
+        email,
+        deleted: false,
+      })
+      .select('email password id institute');
 
     if (!user)
       throw new UnauthorizedException('Credentials are not valid (email)');
@@ -66,17 +99,62 @@ export class AuthService {
     if (!bcrypt.compareSync(password, user.password))
       throw new UnauthorizedException('Credentials are not valid (password)');
 
+    console.log(user);
+
     return {
-      ...user.toObject(),
-      token: this.getJwtToken({ id: user.id }),
+      token: this.getJwtToken({
+        id: user.id,
+        instituteId: user.institute.instituteId,
+      }),
     };
   }
 
   async checkAuthStatus(user: User) {
     return {
       ...user,
-      token: this.getJwtToken({ id: user.id }),
+      token: this.getJwtToken({
+        id: user.id,
+        instituteId: user.institute.instituteId,
+      }),
     };
+  }
+
+  async current(user: User) {
+    const [userInstance, instituteInstance, careersInstance] =
+      await Promise.all([
+        this.find(user.id, user),
+        this.instituteService.findOne(user.institute.instituteId),
+        this.careersService.findAll(user),
+      ]);
+
+    return {
+      user: userInstance,
+      institute: instituteInstance,
+      careers: careersInstance,
+    };
+  }
+
+  async getAllUsersPaginated({
+    paginationDto,
+    user,
+  }: {
+    paginationDto: PaginationDto;
+    user: User;
+  }) {
+    const { filter, limit, page, sort } = paginationDto;
+
+    const filters = {
+      deleted: false,
+      'institute.instituteId': user.institute.instituteId,
+      ...(filter && { $or: [{ fullName: { $regex: filter, $options: 'i' } }] }),
+    };
+
+    return await paginate(this.userModel, {
+      page,
+      limit,
+      sort: sort as any,
+      filters,
+    });
   }
 
   private getJwtToken(payload: JwtPayload) {
@@ -84,11 +162,7 @@ export class AuthService {
     return token;
   }
 
-  private handleDBErrors(error: any): never {
-    if (error.code === '23505') throw new BadRequestException(error.detail);
-
-    console.log(error);
-
-    throw new InternalServerErrorException('Please check server logs');
+  private handleDBErrors(error: any): any {
+    throw new BadRequestException(error.response ?? 'Please check server logs');
   }
 }

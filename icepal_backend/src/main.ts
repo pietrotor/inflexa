@@ -14,6 +14,10 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
+      // transform: true,
+      // transformOptions: {
+      //   enableImplicitConversion: true,
+      // },
     }),
   );
 
@@ -25,6 +29,11 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/v1/swagger', app, document);
+
+  app.enableCors({
+    origin: 'http://localhost:5173', // Cambia este valor al dominio de tu frontend
+    credentials: true, // Si necesitas enviar cookies o encabezados de autenticación
+  });
 
   await app.listen(process.env.PORT);
   logger.log(`App running on port ${process.env.PORT}`);

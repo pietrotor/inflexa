@@ -1,6 +1,5 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-// import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 
@@ -9,13 +8,16 @@ import { AuthController } from './auth.controller';
 import { User, UserSchema } from './entities/user.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { MongooseModule } from '@nestjs/mongoose';
+import { InstituteModule } from 'src/institute/institute.module';
+import { CareersModule } from 'src/careers/careers.module';
 
 @Module({
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
   imports: [
     ConfigModule,
-
+    forwardRef(() => CareersModule),
+    InstituteModule,
     // TypeOrmModule.forFeature([ User ]),
     MongooseModule.forFeature([
       {
@@ -30,8 +32,6 @@ import { MongooseModule } from '@nestjs/mongoose';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        // console.log('JWT Secret', configService.get('JWT_SECRET') )
-        // console.log('JWT SECRET', process.env.JWT_SECRET)
         return {
           secret: configService.get('JWT_SECRET'),
           signOptions: {
@@ -40,12 +40,6 @@ import { MongooseModule } from '@nestjs/mongoose';
         };
       },
     }),
-    // JwtModule.register({
-    // secret: process.env.JWT_SECRET,
-    // signOptions: {
-    //   expiresIn:'2h'
-    // }
-    // })
   ],
   exports: [JwtStrategy, PassportModule, JwtModule],
 })

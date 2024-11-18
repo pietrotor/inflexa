@@ -1,25 +1,39 @@
 import { ApiProperty } from '@nestjs/swagger';
-
 import { Type } from 'class-transformer';
-import { IsOptional, IsPositive, Min } from 'class-validator';
-
+import { IsOptional, IsPositive, Min, IsString } from 'class-validator';
 
 export class PaginationDto {
+  @ApiProperty({
+    default: 10,
+    description: 'Number of rows per page',
+  })
+  @IsOptional()
+  @IsPositive()
+  @Type(() => Number)
+  limit?: number = 10;
 
-    @ApiProperty({
-        default: 10, description: 'How many rows do you need'
-    })
-    @IsOptional()
-    @IsPositive()
-    @Type( () => Number ) // enableImplicitConversions: true
-    limit?: number;
-    
-    @ApiProperty({
-        default: 0, description: 'How many rows do you want to skip'
-    })
-    @IsOptional()
-    @Min(0)
-    @Type( () => Number ) // enableImplicitConversions: true
-    offset?: number;
+  @ApiProperty({
+    default: 1,
+    description: 'Page number',
+  })
+  @IsOptional()
+  @Min(1)
+  @Type(() => Number)
+  page?: number = 1;
 
+  @ApiProperty({
+    default: 'created_at:asc',
+    description: 'Sort fields (e.g., "created_at:asc,name:desc")',
+  })
+  @IsOptional()
+  @IsString()
+  sort?: string = 'created_at:asc';
+
+  @ApiProperty({
+    description: 'Filters as a JSON object (e.g., {"isActive":true})',
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => String)
+  filter?: string;
 }

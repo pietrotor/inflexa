@@ -10,6 +10,9 @@ import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { EnvConfiguration } from './config/app.config';
 import { JoiValidationSchema } from './config/joi.validation';
+import { StudentsModule } from './students/students.module';
+import { InstituteModule } from './institute/institute.module';
+import { CareersModule } from './careers/careers.module';
 
 @Module({
   imports: [
@@ -31,6 +34,12 @@ import { JoiValidationSchema } from './config/joi.validation';
     SeedModule,
 
     AuthModule,
+
+    StudentsModule,
+
+    InstituteModule,
+
+    CareersModule,
   ],
 })
 export class AppModule {}
