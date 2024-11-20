@@ -35,7 +35,7 @@ import { CareersModule } from 'src/careers/careers.module';
         return {
           secret: configService.get('JWT_SECRET'),
           signOptions: {
-            expiresIn: '2h',
+            expiresIn: '24h',
           },
         };
       },

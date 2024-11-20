@@ -19,6 +19,18 @@ export class User extends BaseEntity {
   @Prop({ type: String, default: generateUUID })
   _id: String;
 
+  @ApiProperty({ type: String })
+  @Prop({ type: String })
+  name: string;
+
+  @ApiProperty({ type: String })
+  @Prop({ type: String })
+  lastName: string;
+
+  @ApiProperty()
+  @Prop({ type: String, required: true })
+  fullName: string;
+
   @ApiProperty()
   @Prop({ type: String, unique: true, required: true })
   email: string;
@@ -26,10 +38,6 @@ export class User extends BaseEntity {
   @ApiProperty()
   @Prop({ type: String, select: false, required: true })
   password: string;
-
-  @ApiProperty()
-  @Prop({ type: String, required: true })
-  fullName: string;
 
   @ApiProperty()
   @Prop({ type: Boolean, default: true })

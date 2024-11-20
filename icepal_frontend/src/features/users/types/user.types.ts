@@ -5,6 +5,8 @@ type User = {
   deletedAt: string | null
   deletedBy: string | null
   email: string
+  name: string
+  lastName: string
   fullName: string
   isActive: boolean
   roles: string[]
@@ -16,4 +18,8 @@ type User = {
   __v: number
 }
 
-export type { User }
+type UpdateUserDto = Partial<User> & {
+  _id: string
+}
+
+export type { User, UpdateUserDto }

@@ -6,6 +6,8 @@ import {
   UseGuards,
   Req,
   Headers,
+  Patch,
+  Param,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -16,7 +18,12 @@ import { AuthService } from './auth.service';
 import { RawHeaders, GetUser, Auth } from './decorators';
 import { RoleProtected } from './decorators/role-protected.decorator';
 
-import { CreateUserDto, LoginUserDto, UsersPaginatedResponseDto } from './dto';
+import {
+  CreateUserDto,
+  LoginUserDto,
+  UpdateUserDto,
+  UsersPaginatedResponseDto,
+} from './dto';
 import { User } from './entities/user.entity';
 import { UserRoleGuard } from './guards/user-role.guard';
 import { ValidRoles } from './interfaces';
@@ -73,5 +80,20 @@ export class AuthController {
       user,
       paginationDto: paginationParams,
     });
+  }
+
+  @Patch('users/:id')
+  @Auth(ValidRoles.user)
+  @ApiResponse({
+    status: 200,
+    description: 'List of users retrieved successfully',
+    type: User,
+  })
+  updateUser(
+    @Param('id') id: string,
+    @GetUser() user: User,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.authService.update(id, user, updateUserDto);
   }
 }

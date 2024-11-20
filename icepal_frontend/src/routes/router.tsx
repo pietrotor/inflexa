@@ -69,7 +69,7 @@ export const router = createBrowserRouter([
             path: 'create',
             lazy: async () => {
               return {
-                element: <></>
+                element: <>123</>
               }
             }
           }

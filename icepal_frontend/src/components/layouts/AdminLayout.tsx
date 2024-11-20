@@ -4,10 +4,9 @@ import { PageLoader, Sidebar, Typography } from 'design-system-eduno'
 import { ADMIN_SIDEBAR_CONFIG } from '@/utils/constants/sidebar-config'
 import { useCurrent } from '@/features/auth/api/get-current'
 
-import { routerManager } from '@/routes'
-import { AdminRoutesEnum } from '@/utils'
 import { useCurrentSessionStore } from '@/features/auth'
 import { useBreadcrumbs } from '@/hooks'
+import { Navigate } from 'react-router'
 
 type AdminLayoutProps = {
   children: ReactNode
@@ -35,10 +34,7 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
   }
 
   if (!data || isError) {
-    routerManager.to({
-      name: AdminRoutesEnum.LOGIN
-    })
-    return <></>
+    return <Navigate to={'/login'} />
   }
   return (
     <main className="h-screen">

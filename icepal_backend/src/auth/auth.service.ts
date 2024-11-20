@@ -1,7 +1,7 @@
 import {
   BadRequestException,
   Injectable,
-  InternalServerErrorException,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -10,7 +10,7 @@ import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
 import { User } from './entities/user.entity';
-import { LoginUserDto, CreateUserDto } from './dto';
+import { LoginUserDto, CreateUserDto, UpdateUserDto } from './dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { InjectModel } from '@nestjs/mongoose';
 import { InstituteService } from 'src/institute/institute.service';
@@ -42,7 +42,8 @@ export class AuthService {
 
   async create(createUserDto: CreateUserDto) {
     try {
-      const { password, instituteId, ...userData } = createUserDto;
+      const { password, instituteId, name, lastName, ...userData } =
+        createUserDto;
 
       const userExists = await this.userModel.findOne({
         email: userData.email,
@@ -57,8 +58,13 @@ export class AuthService {
         instituteId,
       );
 
+      const fullName = name.trim() + ' ' + lastName.trim();
+
       const user = await this.userModel.create({
         ...userData,
+        name: name.trim(),
+        lastName: lastName.trim(),
+        fullName,
         password: bcrypt.hashSync(password, 10),
         institute: {
           instituteId: instituteInstance._id,
@@ -155,6 +161,20 @@ export class AuthService {
       sort: sort as any,
       filters,
     });
+  }
+
+  async update(id: string, user: User, updateUserDto: UpdateUserDto) {
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      id,
+      { $set: updateUserDto }, // Actualización parcial
+      { new: true, runValidators: true }, // Retorna el documento actualizado
+    );
+
+    if (!updatedUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return updatedUser;
   }
 
   private getJwtToken(payload: JwtPayload) {

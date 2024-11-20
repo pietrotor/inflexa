@@ -1,15 +1,12 @@
-import React from 'react'
+import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import './index.css'
 import { RouterProvider } from 'react-router-dom'
 import { router } from './routes'
-// import { ThemeProvider } from '@material-tailwind/react'
-// import { theme } from '@/lib/material-tailwind'
 import { Toaster } from 'sonner'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ThemeProvider } from 'design-system-eduno'
-
-const queryClient = new QueryClient()
+import { QueryClientProvider } from '@tanstack/react-query'
+import { PageLoader, ThemeProvider } from 'design-system-eduno'
+import { queryClient } from './lib/react-query'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -19,7 +16,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           primaryColor: '#0047BA'
         }}
       >
-        <RouterProvider router={router} />
+        <Suspense fallback={<PageLoader />}>
+          <RouterProvider router={router} />
+        </Suspense>
         <Toaster richColors position="bottom-right" />
       </ThemeProvider>
     </QueryClientProvider>
