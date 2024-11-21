@@ -96,4 +96,15 @@ export class AuthController {
   ) {
     return this.authService.update(id, user, updateUserDto);
   }
+
+  @Post('users/check-email')
+  @Auth(ValidRoles.user)
+  @ApiResponse({
+    status: 200,
+    description: 'Retrieve user by email',
+    type: User,
+  })
+  getUserByEmail(@GetUser() user: User, @Body() email: { email: string }) {
+    return this.authService.getUserByEmail(user, email);
+  }
 }

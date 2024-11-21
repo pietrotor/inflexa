@@ -18,8 +18,17 @@ type User = {
   __v: number
 }
 
-type UpdateUserDto = Partial<User> & {
-  _id: string
+type CreateUserDto = {
+  email: string
+  password: string
+  name: string
+  lastName: string
+  instituteId: string
 }
 
-export type { User, UpdateUserDto }
+type UpdateUserDto = Partial<CreateUserDto> & {
+  _id: string
+  isActive?: boolean
+}
+
+export type { CreateUserDto, User, UpdateUserDto }

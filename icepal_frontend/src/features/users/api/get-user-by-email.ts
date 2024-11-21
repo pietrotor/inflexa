@@ -2,47 +2,42 @@ import { useNotifications } from '@/hooks'
 import { MutationConfig, queryClient } from '@/lib/react-query'
 import { useMutation } from '@tanstack/react-query'
 import { edunoClient } from '@/lib/axios'
-import { UpdateUserDto, User } from '../types'
+import { User } from '../types'
 import { userQueryKeys } from './query-keys'
 
-export function updateUser(data: UpdateUserDto): Promise<User> {
-  const { _id, ...body } = data
+export function getUserByEmail(body: { email: string }): Promise<User> {
   return edunoClient
-    .patch('/api/v1/auth/users/' + _id, body)
+    .post('/api/v1/auth/users/check-email', body)
     .then(({ data }) => {
       return data
     })
 }
 
-type MutationFn = typeof updateUser
+type MutationFn = typeof getUserByEmail
 
-interface UseUpdteParams {
+interface useUserByEmail {
   config?: MutationConfig<MutationFn>
   showNotification?: boolean
 }
 
-export function useUpdateUser({
+export function useUserByEmail({
   config,
   showNotification = true
-}: UseUpdteParams = {}) {
-  const { addErrorNotification, addSuccessNotification } = useNotifications()
+}: useUserByEmail = {}) {
+  const { addSuccessNotification } = useNotifications()
 
   return useMutation({
-    onError(error) {
-      addErrorNotification('No se pudo actualizar el usuario')
-      console.error(error)
-    },
     onSuccess(data) {
       queryClient.invalidateQueries({
         queryKey: userQueryKeys.all
       })
       if (showNotification) {
-        addSuccessNotification('Usuario actualizado correctamente')
+        addSuccessNotification('Usuario encontrado.')
       }
 
       return data
     },
     ...config,
-    mutationFn: updateUser
+    mutationFn: getUserByEmail
   })
 }

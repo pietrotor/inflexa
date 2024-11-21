@@ -1,6 +1,7 @@
 import { ColumnDef, DataTable, Switch } from 'design-system-eduno'
 import { User, useUpdateUser } from '@/features/users'
 import { TDataTablePaginatedProps } from '@/types'
+import { ActionButtons } from '@/components'
 
 export const UsersTable = ({
   data,
@@ -9,11 +10,22 @@ export const UsersTable = ({
   pagination,
   search,
   toolbar,
-  toolbarPosition
-}: TDataTablePaginatedProps<User>) => {
+  toolbarPosition,
+  onUpdate
+}: TDataTablePaginatedProps<User> & {
+  onUpdate?: (user: User) => void
+}) => {
   const updateMutation = useUpdateUser()
 
   const columns: ColumnDef<User>[] = [
+    {
+      accessorKey: 'actions',
+      header: '',
+      cell: ({ row }) => (
+        <ActionButtons onUpdate={() => onUpdate?.(row.original)} />
+      ),
+      size: 4
+    },
     {
       accessorKey: 'fullName',
       header: 'Nombre',
@@ -27,6 +39,7 @@ export const UsersTable = ({
     {
       accessorKey: 'isActive',
       header: 'Estado',
+      size: 10,
       cell: ({ row }) => (
         <div>
           <Switch

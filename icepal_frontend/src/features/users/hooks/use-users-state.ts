@@ -1,6 +1,8 @@
 import { useDisclosure, usePagination } from '@/hooks'
-import { useUsers } from '@/features/users'
+import { User, useUserController, useUsers } from '@/features/users'
 import { useCallback } from 'react'
+import { useCurrentSessionStore } from '@/features/auth'
+import { UserFormValues } from '../components/CreateUserForm/validations'
 
 const useUsersState = () => {
   const { filters, values } = usePagination()
@@ -23,9 +25,45 @@ const useUsersState = () => {
     }
   })
 
+  const { loading, onCreateUser, onUpdateUser } = useUserController()
+
+  const { institute } = useCurrentSessionStore()
+
   const handleCreateUser = useCallback(() => {
     disclosure.onOpen()
   }, [disclosure])
+
+  const handleUpdateUser = useCallback(
+    (user: User) => {
+      disclosure.onOpen(user)
+    },
+    [disclosure]
+  )
+
+  const submitCallback = () => {
+    disclosure.onClose()
+  }
+
+  const onHandleSubmit = (data: UserFormValues) => {
+    if ((disclosure.data as User)?._id) {
+      onUpdateUser(
+        {
+          _id: (disclosure.data as User)?._id,
+          ...data
+        },
+        submitCallback
+      )
+    } else {
+      onCreateUser(
+        {
+          ...data,
+          password: data.password!,
+          instituteId: institute!._id
+        },
+        submitCallback
+      )
+    }
+  }
 
   return {
     data,
@@ -40,10 +78,13 @@ const useUsersState = () => {
     },
     search: {
       onSearch: onChangeQuery,
-      query: querySearch
+      query: query
     },
     handleCreateUser,
-    disclosure
+    disclosure,
+    handleUpdateUser,
+    isMutating: loading,
+    onSubmit: onHandleSubmit
   }
 }
 

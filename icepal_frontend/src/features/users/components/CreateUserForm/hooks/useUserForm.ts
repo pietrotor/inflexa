@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form'
-import { UserFormValues, userSchema } from '../validations'
+import { UserFormValues, getUserSchema } from '../validations'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { UpdateUserDto } from '@/features/users/types'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 
 type UserFormParams = {
   initialValues?: UpdateUserDto
@@ -10,16 +10,12 @@ type UserFormParams = {
 
 const useUserForm = ({ initialValues }: UserFormParams = {}) => {
   const form = useForm<UserFormValues>({
-    resolver: zodResolver(userSchema)
-    // defaultValues: {
-    //   name: '',
-    //   lastName: '',
-    //   email: '',
-    //   password: ''
-    // }
+    resolver: zodResolver(getUserSchema({ isEditing: Boolean(initialValues) }))
   })
 
   const { reset } = form
+
+  const isEditing = useMemo(() => Boolean(initialValues), [initialValues])
 
   useEffect(() => {
     if (!initialValues) return
@@ -31,7 +27,8 @@ const useUserForm = ({ initialValues }: UserFormParams = {}) => {
   }, [initialValues, reset])
 
   return {
-    form
+    form,
+    isEditing
   }
 }
 

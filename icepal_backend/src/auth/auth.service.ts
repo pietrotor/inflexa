@@ -152,7 +152,16 @@ export class AuthService {
     const filters = {
       deleted: false,
       'institute.instituteId': user.institute.instituteId,
-      ...(filter && { $or: [{ fullName: { $regex: filter, $options: 'i' } }] }),
+      ...(filter && {
+        $or: [
+          {
+            fullName: { $regex: filter, $options: 'i' },
+          },
+          {
+            email: { $regex: filter, $options: 'i' },
+          },
+        ],
+      }),
     };
 
     return await paginate(this.userModel, {
@@ -164,9 +173,22 @@ export class AuthService {
   }
 
   async update(id: string, user: User, updateUserDto: UpdateUserDto) {
+    let fullName = null;
+    if (updateUserDto.name || updateUserDto.lastName) {
+      if (updateUserDto.name && updateUserDto.lastName) {
+        fullName =
+          updateUserDto.name.trim() + ' ' + updateUserDto.lastName.trim();
+      } else {
+        const userInstance = await this.find(id, user);
+        if (updateUserDto.name) {
+          fullName = updateUserDto.name.trim() + ' ' + userInstance.lastName;
+        } else
+          fullName = userInstance.name + ' ' + updateUserDto.lastName.trim();
+      }
+    }
     const updatedUser = await this.userModel.findByIdAndUpdate(
       id,
-      { $set: updateUserDto }, // Actualización parcial
+      { $set: { ...updateUserDto, ...(fullName && { fullName }) } }, // Actualización parcial
       { new: true, runValidators: true }, // Retorna el documento actualizado
     );
 
@@ -175,6 +197,17 @@ export class AuthService {
     }
 
     return updatedUser;
+  }
+
+  async getUserByEmail(user: User, body: { email: string }) {
+    const userInstance = await this.userModel.findOne({
+      deleted: false,
+      email: body.email,
+    });
+
+    if (!userInstance) throw new NotFoundException('User not found');
+
+    return userInstance;
   }
 
   private getJwtToken(payload: JwtPayload) {

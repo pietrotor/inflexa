@@ -3,9 +3,9 @@ import { UserFormValues } from '../validations'
 import { Input, Label } from 'design-system-eduno'
 import { getFormFieldError } from '@/utils'
 
-const inputName = 'name'
+const inputName = 'lastName'
 
-export const NameField = ({
+export const LastNameField = ({
   form
 }: {
   form: UseFormReturn<UserFormValues>
@@ -14,13 +14,17 @@ export const NameField = ({
 
   return (
     <div className="grid grid-cols-4 gap-2">
-      <Label>Nombre</Label>
+      <Label>Apellido</Label>
       <div className="col-span-3">
         <Controller
           name={inputName}
           control={form.control}
           render={({ field }) => (
-            <Input placeholder="Hugo" {...field} error={error?.message} />
+            <Input
+              placeholder="Rojas Perez"
+              error={error?.message}
+              {...field}
+            />
           )}
         />
       </div>

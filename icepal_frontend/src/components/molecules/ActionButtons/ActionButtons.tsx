@@ -1,37 +1,75 @@
-import { EyeIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
-import { IconButton, Tooltip } from '@material-tailwind/react'
+import {
+  Button,
+  DeleteIcon,
+  Edit,
+  EllipsisVertical,
+  EyeIcon,
+  Popover,
+  PopoverContent,
+  PopoverTrigger
+} from 'design-system-eduno'
+import React from 'react'
 
 type ActionButtonsProps = {
   onUpdate?: () => void
   onDelete?: () => void
   onView?: () => void
+  disabled?: {
+    update?: boolean
+    delete?: boolean
+    view?: boolean
+  }
+}
+
+const ActionButton = ({
+  onClick,
+  icon,
+  textLabel
+}: {
+  onClick?: () => void
+  textLabel: string
+  icon: React.ReactNode
+}) => {
+  if (!onClick) return
+
+  return (
+    <Button
+      onClick={onClick}
+      className="flex justify-start rounded-none p-0 px-4"
+      variant={'ghost'}
+    >
+      {icon} {textLabel}
+    </Button>
+  )
 }
 
 const ActionButtons = ({ onUpdate, onDelete, onView }: ActionButtonsProps) => {
   return (
-    <div className="flex gap-2">
-      {onUpdate && (
-        <IconButton onClick={onUpdate}>
-          <Tooltip content="Editar">
-            <PencilIcon className="h-6 w-6 text-blue-600" />
-          </Tooltip>
-        </IconButton>
-      )}
-      {onView && (
-        <IconButton onClick={onView}>
-          <Tooltip content="Visualizar">
-            <EyeIcon className="h-6 w-6 text-green-600" />
-          </Tooltip>
-        </IconButton>
-      )}
-      {onDelete && (
-        <IconButton onClick={onDelete}>
-          <Tooltip content="Eliminar">
-            <TrashIcon className="h-6 w-6 text-red-600" />
-          </Tooltip>
-        </IconButton>
-      )}
-    </div>
+    <>
+      <Popover>
+        <PopoverTrigger>
+          <Button variant={'ghost'} className="!h-7 !w-7 rounded-full !p-0">
+            <EllipsisVertical />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          side="right"
+          className="flex w-fit min-w-40 flex-col !px-0 !py-0 align-top"
+        >
+          <ActionButton onClick={onUpdate} textLabel="Editar" icon={<Edit />} />
+          <ActionButton
+            onClick={onDelete}
+            textLabel="Eliminar"
+            icon={<DeleteIcon />}
+          />
+          <ActionButton
+            onClick={onView}
+            textLabel="Ver detalle"
+            icon={<EyeIcon />}
+          />
+        </PopoverContent>
+      </Popover>
+    </>
   )
 }
 
